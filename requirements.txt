@@ -1,8 +1,5 @@
-uvicorn
-pydantic
-phonenumbers
-re
 logging
 fastapi
-typing
+pydantic
 psycopg2-binary
+phonenumbers
