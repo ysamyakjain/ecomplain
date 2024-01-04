@@ -1,1 +1,8 @@
-
+uvicorn
+pydantic
+psycopg2
+phonenumbers
+re
+logging
+fastapi
+typing
