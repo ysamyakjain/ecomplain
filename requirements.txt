@@ -6,3 +6,4 @@ re
 logging
 fastapi
 typing
+psycopg2-binary
