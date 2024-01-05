@@ -1,6 +1,5 @@
 import re
 import logging
-import phonenumbers
 from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel 
@@ -29,13 +28,6 @@ class NewRequest(BaseModel):
     user_problem: str
 
 
-def valid_phone_number(phone_number: str, country: str = 'IN') -> bool:
-    try:
-        parsed_number = phonenumbers.parse(phone_number, country)
-        return phonenumbers.is_valid_number(parsed_number)
-    except phonenumbers.phonenumberutil.NumberParseException:
-        return False
-
 def valid_email_checker(email: str) -> bool:
     email_regex = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
     return bool(re.match(email_regex, email))
@@ -47,15 +39,12 @@ async def home():
 
 @app.post("/newrequest")
 async def new_request(user_info: NewRequest):
+    logging.info("new request received")
     # Check if the email is valid
     if not valid_email_checker(user_info.user_email):
+        logging.info("invalid email")
         return JSONResponse(content={"message": "Invalid email"}, status_code=400)
     
-    if user_info.user_phone is not None:
-        # Check if the phone number is valid
-        if not valid_phone_number(user_info.user_phone):
-            return JSONResponse(content={"message": "Invalid phone number"}, status_code=400)
-        
     # Connect to the database
     db_instance = Database()
     await db_instance.db_connect()
@@ -67,6 +56,7 @@ async def new_request(user_info: NewRequest):
                 '{user_info.user_problem}'
                 );"""
     await db_instance.db_execute_query(query)
+    logging.info("query executed")
     await db_instance.db_disconnect()
     return JSONResponse(content={"message": "Request added successfully"}, status_code=200)
 
