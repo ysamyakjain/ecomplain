@@ -4,19 +4,24 @@ from pydantic import BaseModel
 from typing import Optional
 import phonenumbers
 import re
+from fastapi.middleware.cors import CORSMiddleware
+
 
 
 from database_connection import Database
 
 logging.basicConfig(level=logging.INFO)
 app = FastAPI()
+
+# Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # You might want to limit this to specific origins in production
+    allow_origins=["*"],  # Allows all origins
     allow_credentials=True,
-    allow_methods=["POST"],  # You can specify specific HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],  # You can specify specific headers
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
+
 
 class NewRequest(BaseModel):
     user_name: str
@@ -66,16 +71,13 @@ async def new_request(user_info: NewRequest):
     await db_instance.db_disconnect()
     return {"message": "Request received"}
 
-@app.get("/fetchrequest/{email:str}")
-async def all_requests(email: str):
-    # Check if the email is valid
-    if not valid_email_checker(email):
-        return {"message": "Invalid email address"}
+@app.get("/fetchrequest")
+async def all_requests():
     # Connect to the database
     db_instance = Database()
     await db_instance.db_connect()
     # Get all the requests from the database
-    query = f"select * from user_queries.user_stuff where user_email = '{email}';"
+    query = f"select * from user_queries.user_stuff;"
     result = await db_instance.db_fetch_results(query)
     logging.info(f'result from db: {result}')
     await db_instance.db_disconnect()
