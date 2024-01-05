@@ -10,6 +10,13 @@ from database_connection import Database
 
 logging.basicConfig(level=logging.INFO)
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # You might want to limit this to specific origins in production
+    allow_credentials=True,
+    allow_methods=["POST"],  # You can specify specific HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],  # You can specify specific headers
+)
 
 class NewRequest(BaseModel):
     user_name: str
