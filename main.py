@@ -1,12 +1,11 @@
+import re
 import logging
+import phonenumbers
+from typing import Optional
 from fastapi import FastAPI
 from pydantic import BaseModel 
-from typing import Optional
-import phonenumbers
-import re
+from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
-
-
 
 from database_connection import Database
 
@@ -44,18 +43,18 @@ def valid_email_checker(email: str) -> bool:
 @app.get("/")
 async def home():
     db_instance = Database()
-    return {"message": "APIs are up and running"}
+    return JSONResponse(content={"message": "APIs are up and running"}, status_code=200)
 
 @app.post("/newrequest")
 async def new_request(user_info: NewRequest):
     # Check if the email is valid
     if not valid_email_checker(user_info.user_email):
-        return {"message": "Invalid email address"}
+        return JSONResponse(content={"message": "Invalid email"}, status_code=400)
     
     if user_info.user_phone is not None:
         # Check if the phone number is valid
         if not valid_phone_number(user_info.user_phone):
-            return {"message": "Invalid phone number"}
+            return JSONResponse(content={"message": "Invalid phone number"}, status_code=400)
         
     # Connect to the database
     db_instance = Database()
@@ -69,7 +68,7 @@ async def new_request(user_info: NewRequest):
                 );"""
     await db_instance.db_execute_query(query)
     await db_instance.db_disconnect()
-    return {"message": "Request received"}
+    return JSONResponse(content={"message": "Request added successfully"}, status_code=200)
 
 @app.get("/fetchrequest")
 async def all_requests():
@@ -81,4 +80,6 @@ async def all_requests():
     result = await db_instance.db_fetch_results(query)
     logging.info(f'result from db: {result}')
     await db_instance.db_disconnect()
-    return result
+    if not result:
+        return JSONResponse(content={"message": "No requests found"}, status_code=404)
+    return JSONResponse(content={"message": "Request fetched successfully", "data": result}, status_code=200)
